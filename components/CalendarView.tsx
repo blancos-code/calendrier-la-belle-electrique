@@ -113,17 +113,20 @@ export default function CalendarView({ concerts }: CalendarViewProps) {
                   <div className="flex-1 overflow-hidden">
                     <div className="space-y-1">
                       {dayConcerts.slice(0, 2).map(concert => (
-                        <div
+                        <a
                           key={concert.id}
-                          className="text-xs bg-zinc-700 hover:bg-zinc-600 px-2 py-1 rounded truncate text-white"
-                          title={concert.title}
+                          href={concert.eventUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="block text-xs bg-zinc-700 hover:bg-zinc-600 px-2 py-1 rounded truncate text-white transition-colors"
+                          title={`${concert.title} - ${concert.time}\n${concert.genre ? concert.genre + ' • ' : ''}${concert.venue}\nCliquez pour voir les détails`}
                         >
                           {concert.title}
-                        </div>
+                        </a>
                       ))}
                       {dayConcerts.length > 2 && (
-                        <div className="text-xs text-zinc-400">
-                          +{dayConcerts.length - 2} autres
+                        <div className="text-xs text-zinc-400 px-2">
+                          +{dayConcerts.length - 2} autre{dayConcerts.length > 3 ? 's' : ''}
                         </div>
                       )}
                     </div>
