@@ -8,6 +8,8 @@ import SearchAndFilter from '@/components/SearchAndFilter';
 import StatsSection from '@/components/StatsSection';
 import UpcomingHighlight from '@/components/UpcomingHighlight';
 import LoadingSkeleton from '@/components/LoadingSkeleton';
+import { useFavorites } from '@/contexts/FavoritesContext';
+import { generateMultipleICS, downloadICS } from '@/lib/icsGenerator';
 
 export default function Home() {
   const [concerts, setConcerts] = useState<Concert[]>([]);
@@ -16,6 +18,8 @@ export default function Home() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedGenre, setSelectedGenre] = useState('');
   const [selectedVenue, setSelectedVenue] = useState('');
+  const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
+  const { favorites } = useFavorites();
 
   useEffect(() => {
     async function fetchConcerts() {
@@ -52,10 +56,17 @@ export default function Home() {
 
       const matchesGenre = !selectedGenre || concert.genre === selectedGenre;
       const matchesVenue = !selectedVenue || concert.venue === selectedVenue;
+      const matchesFavorites = !showFavoritesOnly || favorites.includes(concert.id);
 
-      return matchesSearch && matchesGenre && matchesVenue;
+      return matchesSearch && matchesGenre && matchesVenue && matchesFavorites;
     });
-  }, [concerts, searchTerm, selectedGenre, selectedVenue]);
+  }, [concerts, searchTerm, selectedGenre, selectedVenue, showFavoritesOnly, favorites]);
+
+  const handleExportAllToCalendar = () => {
+    if (filteredConcerts.length === 0) return;
+    const icsContent = generateMultipleICS(filteredConcerts);
+    downloadICS(icsContent, 'la-belle-electrique-concerts.ics');
+  };
 
   return (
     <div className="min-h-screen bg-zinc-950">
@@ -116,32 +127,72 @@ export default function Home() {
             {/* Upcoming Highlight */}
             <UpcomingHighlight concerts={concerts} />
 
-            {/* View Toggle */}
-            <div className="flex items-center gap-4">
-          <button
-            onClick={() => setViewMode('grid')}
-            className={`px-4 py-2 rounded-lg transition-colors ${
-              viewMode === 'grid'
-                ? 'bg-white text-black'
-                : 'bg-zinc-800 text-white hover:bg-zinc-700'
-            }`}
-          >
-            Grille
-          </button>
-          <button
-            onClick={() => setViewMode('calendar')}
-            className={`px-4 py-2 rounded-lg transition-colors ${
-              viewMode === 'calendar'
-                ? 'bg-white text-black'
-                : 'bg-zinc-800 text-white hover:bg-zinc-700'
-            }`}
-          >
-            Calendrier
-          </button>
-          <div className="ml-auto text-zinc-400">
-            {filteredConcerts.length} événement{filteredConcerts.length > 1 ? 's' : ''}
-          </div>
-        </div>
+            {/* View Toggle and Actions */}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setViewMode('grid')}
+                  className={`px-4 py-2 rounded-lg transition-colors ${
+                    viewMode === 'grid'
+                      ? 'bg-white text-black'
+                      : 'bg-zinc-800 text-white hover:bg-zinc-700'
+                  }`}
+                >
+                  Grille
+                </button>
+                <button
+                  onClick={() => setViewMode('calendar')}
+                  className={`px-4 py-2 rounded-lg transition-colors ${
+                    viewMode === 'calendar'
+                      ? 'bg-white text-black'
+                      : 'bg-zinc-800 text-white hover:bg-zinc-700'
+                  }`}
+                >
+                  Calendrier
+                </button>
+              </div>
+
+              <div className="flex items-center gap-2 flex-wrap">
+                <button
+                  onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
+                    showFavoritesOnly
+                      ? 'bg-red-500 text-white'
+                      : 'bg-zinc-800 text-white hover:bg-zinc-700'
+                  }`}
+                  title="Afficher uniquement les favoris"
+                >
+                  <svg className="w-4 h-4" fill={showFavoritesOnly ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                      d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                  </svg>
+                  {showFavoritesOnly ? 'Favoris' : 'Tous'}
+                  {favorites.length > 0 && (
+                    <span className="bg-red-600 text-white text-xs px-2 py-0.5 rounded-full">
+                      {favorites.length}
+                    </span>
+                  )}
+                </button>
+
+                {filteredConcerts.length > 0 && (
+                  <button
+                    onClick={handleExportAllToCalendar}
+                    className="flex items-center gap-2 px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-white rounded-lg transition-colors"
+                    title="Exporter tous les concerts visibles"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                        d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                    </svg>
+                    <span className="hidden sm:inline">Export {filteredConcerts.length}</span>
+                  </button>
+                )}
+              </div>
+
+              <div className="ml-auto text-zinc-400">
+                {filteredConcerts.length} événement{filteredConcerts.length > 1 ? 's' : ''}
+              </div>
+            </div>
 
             {/* Search and Filters */}
             <SearchAndFilter
