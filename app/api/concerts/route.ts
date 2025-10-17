@@ -28,10 +28,10 @@ async function scrapeConcerts(): Promise<Concert[]> {
 
     if (isProduction) {
       browser = await puppeteer.launch({
-        args: chromium.args,
-        defaultViewport: chromium.defaultViewport,
+        args: [...chromium.args, '--no-sandbox', '--disable-setuid-sandbox'],
+        defaultViewport: { width: 1280, height: 720 },
         executablePath: await chromium.executablePath(),
-        headless: chromium.headless,
+        headless: true,
       });
     } else {
       // Local development with regular puppeteer
@@ -79,7 +79,7 @@ async function scrapeConcerts(): Promise<Concert[]> {
 
     await new Promise(resolve => setTimeout(resolve, 3000));
 
-    const concerts = await page.evaluate((baseUrl) => {
+    const concerts = await page.evaluate((baseUrl: string) => {
       const concertElements: Concert[] = [];
 
       // Debug: log what we find
@@ -207,7 +207,7 @@ async function scrapeConcerts(): Promise<Concert[]> {
     }, BASE_URL);
 
     // Sort by date
-    concerts.sort((a, b) => {
+    concerts.sort((a: Concert, b: Concert) => {
       const dateA = parseDate(a.date);
       const dateB = parseDate(b.date);
       return dateA.getTime() - dateB.getTime();
