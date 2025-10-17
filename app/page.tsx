@@ -5,6 +5,9 @@ import { Concert } from '@/types/concert';
 import ConcertCard from '@/components/ConcertCard';
 import CalendarView from '@/components/CalendarView';
 import SearchAndFilter from '@/components/SearchAndFilter';
+import StatsSection from '@/components/StatsSection';
+import UpcomingHighlight from '@/components/UpcomingHighlight';
+import LoadingSkeleton from '@/components/LoadingSkeleton';
 
 export default function Home() {
   const [concerts, setConcerts] = useState<Concert[]>([]);
@@ -68,21 +71,53 @@ export default function Home() {
                 Tous les concerts et événements à venir
               </p>
             </div>
-            <a
-              href="https://www.la-belle-electrique.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-white rounded-lg transition-colors text-sm"
-            >
-              Site officiel →
-            </a>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => {
+                  if (navigator.share) {
+                    navigator.share({
+                      title: 'Calendrier La Belle Électrique',
+                      text: 'Découvre tous les concerts de La Belle Électrique !',
+                      url: window.location.href,
+                    });
+                  } else {
+                    navigator.clipboard.writeText(window.location.href);
+                    alert('Lien copié !');
+                  }
+                }}
+                className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-white rounded-lg transition-colors text-sm hidden sm:block"
+                title="Partager"
+              >
+                🔗 Partager
+              </button>
+              <a
+                href="https://www.la-belle-electrique.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-white rounded-lg transition-colors text-sm"
+              >
+                Site officiel →
+              </a>
+            </div>
           </div>
         </div>
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* View Toggle */}
-        <div className="flex items-center gap-4 mb-6">
+        {/* Loading State */}
+        {loading && <LoadingSkeleton />}
+
+        {/* Content */}
+        {!loading && (
+          <div className="space-y-8">
+            {/* Stats Section */}
+            <StatsSection concerts={concerts} />
+
+            {/* Upcoming Highlight */}
+            <UpcomingHighlight concerts={concerts} />
+
+            {/* View Toggle */}
+            <div className="flex items-center gap-4">
           <button
             onClick={() => setViewMode('grid')}
             className={`px-4 py-2 rounded-lg transition-colors ${
@@ -108,33 +143,23 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Search and Filters */}
-        <div className="mb-8">
-          <SearchAndFilter
-            onSearchChange={setSearchTerm}
-            onGenreFilter={setSelectedGenre}
-            onVenueFilter={setSelectedVenue}
-            genres={genres}
-            venues={venues}
-            selectedGenre={selectedGenre}
-            selectedVenue={selectedVenue}
-          />
-        </div>
+            {/* Search and Filters */}
+            <SearchAndFilter
+              onSearchChange={setSearchTerm}
+              onGenreFilter={setSelectedGenre}
+              onVenueFilter={setSelectedVenue}
+              genres={genres}
+              venues={venues}
+              selectedGenre={selectedGenre}
+              selectedVenue={selectedVenue}
+            />
 
-        {/* Loading State */}
-        {loading && (
-          <div className="text-center py-12">
-            <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-white border-r-transparent"></div>
-            <p className="mt-4 text-zinc-400">Chargement des concerts...</p>
-          </div>
-        )}
-
-        {/* Content */}
-        {!loading && (
-          <>
+            {/* Results */}
             {filteredConcerts.length === 0 ? (
-              <div className="text-center py-12 bg-zinc-900 rounded-lg border border-zinc-800">
-                <p className="text-zinc-400 text-lg">Aucun concert trouvé</p>
+              <div className="text-center py-16 bg-zinc-900 rounded-lg border border-zinc-800">
+                <div className="text-6xl mb-4">🎵</div>
+                <p className="text-zinc-400 text-lg mb-2">Aucun concert trouvé</p>
+                <p className="text-zinc-500 text-sm">Essayez de modifier vos filtres</p>
               </div>
             ) : viewMode === 'calendar' ? (
               <CalendarView concerts={filteredConcerts} />
@@ -145,25 +170,52 @@ export default function Home() {
                 ))}
               </div>
             )}
-          </>
+          </div>
         )}
       </main>
 
       {/* Footer */}
       <footer className="border-t border-zinc-800 mt-16 py-8">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-zinc-500 text-sm">
-          <p>
-            Données scrapées depuis{' '}
-            <a
-              href="https://www.la-belle-electrique.com/fr/programmation"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-zinc-400 hover:text-white transition-colors"
-            >
-              la-belle-electrique.com
-            </a>
-          </p>
-          <p className="mt-2">Projet non officiel - Mis à jour toutes les heures</p>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-6">
+            <div>
+              <h3 className="text-white font-bold mb-2">À propos</h3>
+              <p className="text-zinc-500 text-sm">
+                Calendrier non officiel pour La Belle Électrique.
+                Toutes les données proviennent du site officiel.
+              </p>
+            </div>
+            <div>
+              <h3 className="text-white font-bold mb-2">Liens utiles</h3>
+              <ul className="space-y-1 text-sm">
+                <li>
+                  <a href="https://www.la-belle-electrique.com" target="_blank" rel="noopener noreferrer" className="text-zinc-400 hover:text-white transition-colors">
+                    Site officiel
+                  </a>
+                </li>
+                <li>
+                  <a href="https://billetterie.la-belle-electrique.com/" target="_blank" rel="noopener noreferrer" className="text-zinc-400 hover:text-white transition-colors">
+                    Billetterie
+                  </a>
+                </li>
+                <li>
+                  <a href="https://www.la-belle-electrique.com/fr/infos-pratiques" target="_blank" rel="noopener noreferrer" className="text-zinc-400 hover:text-white transition-colors">
+                    Infos pratiques
+                  </a>
+                </li>
+              </ul>
+            </div>
+            <div>
+              <h3 className="text-white font-bold mb-2">Technologies</h3>
+              <p className="text-zinc-500 text-sm">
+                Next.js • TypeScript • Tailwind CSS<br />
+                Puppeteer • Vercel
+              </p>
+            </div>
+          </div>
+          <div className="text-center text-zinc-500 text-sm border-t border-zinc-800 pt-6">
+            <p>Données actualisées en temps réel • Projet open-source</p>
+          </div>
         </div>
       </footer>
     </div>
