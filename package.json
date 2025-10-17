@@ -4,8 +4,10 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "next build --turbopack",
-    "start": "next start"
+    "prebuild": "node scripts/generate-data.js",
+    "build": "next build",
+    "start": "next start",
+    "export": "npm run prebuild && npm run build"
   },
   "dependencies": {
     "axios": "^1.12.2",

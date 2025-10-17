@@ -17,7 +17,7 @@ export default function Home() {
   useEffect(() => {
     async function fetchConcerts() {
       try {
-        const response = await fetch('/api/concerts');
+        const response = await fetch('/calendrier-la-belle-electrique/concerts.json');
         const data = await response.json();
         setConcerts(data);
       } catch (error) {

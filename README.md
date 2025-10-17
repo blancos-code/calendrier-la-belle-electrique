@@ -1,36 +1,110 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Calendrier La Belle Électrique
 
-## Getting Started
+Application web qui affiche les concerts et événements de La Belle Électrique dans un format calendrier interactif.
 
-First, run the development server:
+## 🎵 Fonctionnalités
+
+- **Vue grille et calendrier** : Deux modes d'affichage pour explorer les événements
+- **Recherche** : Trouver rapidement un artiste ou événement
+- **Filtres** : Par genre musical et salle
+- **Design moderne** : Interface sombre inspirée du site officiel
+- **Responsive** : Fonctionne sur mobile, tablette et desktop
+
+## 🚀 Démarrage rapide
+
+### Installation
+
+```bash
+npm install
+```
+
+### Développement
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Ouvrez [http://localhost:3000](http://localhost:3000) dans votre navigateur.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Build pour production
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm run build
+```
 
-## Learn More
+### Générer les données
 
-To learn more about Next.js, take a look at the following resources:
+Pour scraper les concerts depuis le site officiel :
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+node scripts/generate-data.js
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+**Note** : Le site de La Belle Électrique utilise du JavaScript pour charger le contenu dynamiquement. Pour un scraping fonctionnel, il faudrait utiliser un outil comme Puppeteer ou Playwright au lieu de Cheerio. Le script actuel est une base à adapter.
 
-## Deploy on Vercel
+## 📦 Technologies
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- **Next.js 15** - Framework React avec App Router
+- **TypeScript** - Typage statique
+- **Tailwind CSS** - Styles utilitaires
+- **Cheerio** - Web scraping (à remplacer par Puppeteer pour sites JS)
+- **date-fns** - Manipulation des dates
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 🌐 Déploiement GitHub Pages
+
+Le site est configuré pour se déployer automatiquement sur GitHub Pages :
+
+1. Activez GitHub Pages dans les paramètres du repository
+2. Source : GitHub Actions
+3. Le workflow se déclenchera automatiquement à chaque push sur `main`
+4. Mise à jour automatique toutes les 6 heures
+
+URL du site : `https://[votre-username].github.io/calendrier-la-belle-electrique/`
+
+## 📝 Structure du projet
+
+```
+├── app/
+│   ├── page.tsx              # Page principale
+│   ├── layout.tsx            # Layout global
+│   └── globals.css           # Styles globaux
+├── components/
+│   ├── ConcertCard.tsx       # Carte de concert
+│   ├── CalendarView.tsx      # Vue calendrier
+│   └── SearchAndFilter.tsx   # Recherche et filtres
+├── lib/
+│   └── scraper.ts            # Logique de scraping
+├── types/
+│   └── concert.ts            # Types TypeScript
+├── scripts/
+│   └── generate-data.js      # Script de génération de données
+└── public/
+    └── concerts.json         # Données des concerts
+
+```
+
+## ⚠️ Note importante sur le scraping
+
+Le script de scraping actuel utilise Cheerio, qui ne peut pas exécuter JavaScript. Le site de La Belle Électrique charge probablement son contenu dynamiquement via JavaScript.
+
+Pour un scraping fonctionnel, il faudrait :
+
+1. Utiliser **Puppeteer** ou **Playwright** pour charger le JavaScript
+2. Ou trouver l'API backend utilisée par le site (via l'onglet Network des DevTools)
+
+Exemple avec Puppeteer :
+
+```bash
+npm install puppeteer
+```
+
+Puis adapter le script pour utiliser un navigateur headless.
+
+## 📄 Licence
+
+Projet non officiel créé à des fins éducatives. Les données appartiennent à La Belle Électrique.
+
+## 🔗 Liens
+
+- [Site officiel La Belle Électrique](https://www.la-belle-electrique.com)
+- [Programmation officielle](https://www.la-belle-electrique.com/fr/programmation)
