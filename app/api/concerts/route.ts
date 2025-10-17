@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
-import puppeteer from 'puppeteer';
+import puppeteer from 'puppeteer-core';
+import chromium from '@sparticuz/chromium';
 
 const BASE_URL = 'https://www.la-belle-electrique.com';
 
@@ -22,10 +23,24 @@ async function scrapeConcerts(): Promise<Concert[]> {
   let browser;
 
   try {
-    browser = await puppeteer.launch({
-      headless: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox']
-    });
+    // Detect if running on Vercel (serverless)
+    const isProduction = process.env.VERCEL || process.env.NODE_ENV === 'production';
+
+    if (isProduction) {
+      browser = await puppeteer.launch({
+        args: chromium.args,
+        defaultViewport: chromium.defaultViewport,
+        executablePath: await chromium.executablePath(),
+        headless: chromium.headless,
+      });
+    } else {
+      // Local development with regular puppeteer
+      const puppeteerRegular = require('puppeteer');
+      browser = await puppeteerRegular.launch({
+        headless: true,
+        args: ['--no-sandbox', '--disable-setuid-sandbox']
+      });
+    }
 
     const page = await browser.newPage();
 
