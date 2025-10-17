@@ -58,7 +58,7 @@ export default function Home() {
     <div className="min-h-screen bg-zinc-950">
       {/* Header */}
       <header className="border-b border-zinc-800 bg-zinc-900/50 backdrop-blur-sm sticky top-0 z-10">
-        <div className="container mx-auto px-4 py-6">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold text-white mb-1">
@@ -80,7 +80,7 @@ export default function Home() {
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* View Toggle */}
         <div className="flex items-center gap-4 mb-6">
           <button
@@ -151,7 +151,7 @@ export default function Home() {
 
       {/* Footer */}
       <footer className="border-t border-zinc-800 mt-16 py-8">
-        <div className="container mx-auto px-4 text-center text-zinc-500 text-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-zinc-500 text-sm">
           <p>
             Données scrapées depuis{' '}
             <a

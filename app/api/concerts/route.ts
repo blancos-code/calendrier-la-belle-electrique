@@ -36,6 +36,14 @@ async function scrapeConcerts(): Promise<Concert[]> {
     });
 
     console.log('Waiting for content...');
+
+    // Wait for any element that might indicate content is loaded
+    try {
+      await page.waitForSelector('a, article, div', { timeout: 10000 });
+    } catch (e) {
+      console.log('No selector found, continuing anyway');
+    }
+
     // Scroll to load lazy content
     await page.evaluate(async () => {
       await new Promise((resolve) => {
@@ -54,48 +62,42 @@ async function scrapeConcerts(): Promise<Concert[]> {
       });
     });
 
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    await new Promise(resolve => setTimeout(resolve, 3000));
 
     const concerts = await page.evaluate((baseUrl) => {
       const concertElements: Concert[] = [];
 
-      // Try different approaches to find event elements
-      const eventSelectors = [
-        'article',
-        '[class*="event"]',
-        '[class*="card"]',
-        '[class*="item"]',
-        'li a[href*="programmation"]',
-        'div a[href*="programmation"]'
-      ];
+      // Debug: log what we find
+      console.log('Total links on page:', document.querySelectorAll('a').length);
+      console.log('Total articles on page:', document.querySelectorAll('article').length);
+      console.log('Total divs on page:', document.querySelectorAll('div').length);
 
-      let elements: Element[] = [];
-      for (const selector of eventSelectors) {
-        const found = Array.from(document.querySelectorAll(selector));
-        if (found.length > 0) {
-          const filtered = found.filter(el => {
-            const text = el.textContent || '';
-            const hasDate = /\d{2}\.\d{2}\.\d{2}/.test(text);
-            const hasImage = el.querySelector('img') !== null;
-            const hasLink = el.tagName === 'A' || el.querySelector('a[href*="programmation"]') !== null;
-            return hasDate || (hasImage && hasLink);
-          });
+      // Try to find ALL links with text that has dates
+      const allLinks = Array.from(document.querySelectorAll('a'));
+      console.log('Checking', allLinks.length, 'links for date patterns');
 
-          if (filtered.length > 0) {
-            elements = filtered;
-            break;
-          }
+      let elements: Element[] = allLinks.filter(a => {
+        const text = a.textContent || '';
+        const hasDate = /\d{1,2}[\.\/\-]\d{1,2}[\.\/\-]\d{2,4}/.test(text) ||
+                       text.match(/\d{1,2}\s+(janvier|février|mars|avril|mai|juin|juillet|août|septembre|octobre|novembre|décembre)/i);
+        if (hasDate) {
+          console.log('Found link with date:', a.href, text.substring(0, 100));
         }
-      }
+        return hasDate;
+      });
 
-      // If still nothing, try links with images and dates
+      console.log('Found', elements.length, 'links with dates');
+
+      // If still nothing, try to find common event card patterns
       if (elements.length === 0) {
-        elements = Array.from(document.querySelectorAll('a')).filter(a => {
-          const hasImage = a.querySelector('img') !== null;
-          const text = a.textContent || '';
-          const hasDate = /\d{2}\.\d{2}\.\d{2}/.test(text);
-          return hasImage && hasDate;
+        const possibleContainers = Array.from(document.querySelectorAll('article, [class*="card"], [class*="event"], li'));
+        elements = possibleContainers.filter(el => {
+          const text = el.textContent || '';
+          const hasDate = /\d{1,2}[\.\/\-]\d{1,2}[\.\/\-]\d{2,4}/.test(text);
+          const hasLink = el.querySelector('a') !== null;
+          return hasDate && hasLink;
         });
+        console.log('Found', elements.length, 'container elements with dates');
       }
 
       elements.forEach((element, index) => {
