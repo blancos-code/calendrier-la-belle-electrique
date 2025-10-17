@@ -1,13 +1,14 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  output: 'export',
   images: {
-    unoptimized: true,
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'www.la-belle-electrique.com',
+      },
+    ],
   },
-  basePath: '/calendrier-la-belle-electrique',
-  assetPrefix: '/calendrier-la-belle-electrique/',
-  trailingSlash: true,
 };
 
 export default nextConfig;

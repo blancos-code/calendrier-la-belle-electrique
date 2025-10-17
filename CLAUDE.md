@@ -4,15 +4,16 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a calendar application for La Belle Électrique, a French cultural venue in Grenoble. The official website (https://www.la-belle-electrique.com/fr/programmation) displays concerts in a list format without a proper calendar view, which is not very practical. This project scrapes the concert data and displays it in a beautiful, user-friendly calendar format with search and filtering capabilities.
+This is a calendar application for La Belle Électrique, a French cultural venue in Grenoble. The official website displays concerts in a list format without a proper calendar view. This project scrapes concert data in real-time and displays it in a beautiful, user-friendly calendar format with search and filtering capabilities.
 
 ## Tech Stack
 
 - **Framework**: Next.js 15 (App Router)
 - **Language**: TypeScript
 - **Styling**: Tailwind CSS
-- **Web Scraping**: Cheerio + Axios
+- **Web Scraping**: Puppeteer (server-side)
 - **Date Handling**: date-fns
+- **Deployment**: Vercel (free tier with serverless functions)
 
 ## Development Commands
 
@@ -39,31 +40,33 @@ The development server runs on http://localhost:3000
 
 - `/app` - Next.js app router pages and API routes
   - `/app/page.tsx` - Main page with concert grid/calendar view
-  - `/app/api/concerts/route.ts` - API endpoint that returns scraped concert data
+  - `/app/api/concerts/route.ts` - API endpoint that scrapes and returns concert data
 - `/components` - React components
   - `ConcertCard.tsx` - Individual concert card display
   - `CalendarView.tsx` - Calendar grid view with concerts by date
   - `SearchAndFilter.tsx` - Search and filter controls
-- `/lib` - Utility functions
-  - `scraper.ts` - Web scraper for La Belle Électrique website
+- `/lib` - Utility functions (deprecated scraper.ts, now in API route)
 - `/types` - TypeScript type definitions
   - `concert.ts` - Concert data interface
 
 ## Key Features
 
-1. **Web Scraping**: Scrapes concert data from La Belle Électrique's website including title, date, time, genre, venue, images, and sold-out status
-2. **Dual View Modes**: Toggle between grid view (cards) and calendar view
-3. **Search & Filters**: Search by artist name, filter by genre or venue
-4. **Dark Theme**: Styled to match La Belle Électrique's dark aesthetic (zinc-900/950 color scheme)
-5. **Responsive Design**: Works on mobile, tablet, and desktop
+1. **Real-time Web Scraping**: Uses Puppeteer in serverless API route to scrape data on-demand
+2. **Server-Side Scraping**: Scraping happens on Vercel's backend, not client-side
+3. **Caching**: API responses cached for 1 hour to reduce load
+4. **Dual View Modes**: Toggle between grid view (cards) and calendar view
+5. **Search & Filters**: Search by artist name, filter by genre or venue
+6. **Dark Theme**: Styled to match La Belle Électrique's dark aesthetic (zinc-900/950)
+7. **Responsive Design**: Works on mobile, tablet, and desktop
 
 ## Data Flow
 
 1. User visits the site → `app/page.tsx` fetches from `/api/concerts`
-2. API route → calls `getConcertsData()` from `lib/scraper.ts`
-3. Scraper fetches and parses HTML from La Belle Électrique's website
-4. Data is transformed into `Concert[]` objects and returned to the client
-5. Client-side filtering and display in chosen view mode
+2. API route (`app/api/concerts/route.ts`) launches Puppeteer
+3. Puppeteer scrapes https://www.la-belle-electrique.com/fr/programmation
+4. Data is parsed and returned as JSON
+5. Response cached for 1 hour (s-maxage=3600)
+6. Client-side filtering and display in chosen view mode
 
 ## Concert Data Structure
 
@@ -84,9 +87,40 @@ interface Concert {
 }
 ```
 
-## Important Notes
+## Deployment on Vercel
 
-- The scraper parses dates in French format (DD.MM.YY)
-- API route has revalidation set to 3600 seconds (1 hour)
-- Image URLs come directly from La Belle Électrique's CDN
-- The scraper is designed to be resilient to HTML structure changes but may need updates if the source website changes significantly
+### Initial Setup
+
+1. Install Vercel CLI: `npm i -g vercel`
+2. Login: `vercel login`
+3. Deploy: `vercel --prod`
+
+Or use the Vercel dashboard:
+1. Go to https://vercel.com
+2. Import the GitHub repository
+3. Vercel will auto-detect Next.js and deploy
+
+### Important Notes
+
+- **Puppeteer on Vercel**: Vercel supports Puppeteer in serverless functions
+- **Cold Starts**: First request may be slow (3-5s) as Puppeteer initializes
+- **Caching**: Responses are cached for 1 hour to improve performance
+- **Free Tier Limits**: 100GB bandwidth/month, sufficient for this use case
+
+### Environment Variables
+
+No environment variables required for basic functionality.
+
+## Scraping Notes
+
+The scraper in `app/api/concerts/route.ts`:
+- Uses Puppeteer in headless mode
+- Scrolls the page to load lazy content
+- Tries multiple selectors to find event elements
+- Looks for dates in format DD.MM.YY
+- Extracts genre, venue, sold-out status from text content
+
+**Known Issue**: The La Belle Électrique website may load content dynamically. The current scraper might not find events if the HTML structure has changed. To debug:
+1. Check the website structure in browser DevTools
+2. Update the selectors in the `page.evaluate()` function
+3. Consider finding their API endpoint (check Network tab)
